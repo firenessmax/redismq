@@ -1,11 +1,11 @@
 package redismq
 
 import (
+	"crypto/tls"
 	"fmt"
+	"github.com/go-redis/redis"
 	"strconv"
 	"time"
-
-	"gopkg.in/redis.v3"
 )
 
 // Queue is the central element of this library.
@@ -36,8 +36,11 @@ func SelectQueue(redisHost, redisPort, redisPassword string, redisDB int64, name
 	redisClient := redis.NewClient(&redis.Options{
 		Addr:     redisHost + ":" + redisPort,
 		Password: redisPassword,
-		DB:       redisDB,
+		DB:       int(redisDB),
+		TLSConfig: &tls.Config{InsecureSkipVerify: true},
 	})
+	fmt.Println(redisClient.Ping())
+
 	defer redisClient.Close()
 
 	isMember, err := redisClient.SIsMember(masterQueueKey(), name).Result()
@@ -56,7 +59,8 @@ func newQueue(redisHost, redisPort, redisPassword string, redisDB int64, name st
 	q.redisClient = redis.NewClient(&redis.Options{
 		Addr:     redisHost + ":" + redisPort,
 		Password: redisPassword,
-		DB:       redisDB,
+		DB:       int(redisDB),
+		TLSConfig: &tls.Config{InsecureSkipVerify: true},
 	})
 	q.redisClient.SAdd(masterQueueKey(), name)
 	q.startStatsWriter()

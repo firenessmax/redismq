@@ -85,7 +85,7 @@ func (queue *BufferedQueue) startWritingBufferToRedis() {
 		for {
 			if len(queue.Buffer) >= queue.BufferSize || time.Now().Unix() >= queue.nextWrite {
 				size := len(queue.Buffer)
-				a := []string{}
+				a := []interface{}{}
 				for i := 0; i < size; i++ {
 					p := <-queue.Buffer
 					a = append(a, p.getString())
