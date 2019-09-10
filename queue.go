@@ -67,12 +67,17 @@ func SelectQueue(redisHost, redisPort, redisPassword string, redisDB int64, name
 
 func newQueue(redisHost, redisPort, redisPassword string, redisDB int64, name string) *Queue {
 	q := &Queue{Name: name}
-	q.redisClient = redis.NewClient(&redis.Options{
-		Addr:      redisHost + ":" + redisPort,
-		Password:  redisPassword,
-		DB:        int(redisDB),
-		TLSConfig: &tls.Config{InsecureSkipVerify: true},
-	})
+	var options = redis.Options{
+		Addr:     redisHost + ":" + redisPort,
+		Password: redisPassword,
+		DB:       int(redisDB),
+	}
+	if sslmode {
+		options.TLSConfig = &tls.Config{InsecureSkipVerify: true}
+	}
+	redisClient := redis.NewClient(&options)
+	fmt.Println("Redis:ping-", redisClient.Ping())
+
 	q.redisClient.SAdd(masterQueueKey(), name)
 	q.startStatsWriter()
 	return q
