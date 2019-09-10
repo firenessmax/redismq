@@ -25,21 +25,32 @@ type dataPoint struct {
 	incr  bool
 }
 
+var (
+	sslmode bool
+)
+
 // CreateQueue return a queue that you can Put() or AddConsumer() to
 // Works like SelectQueue for existing queues
 func CreateQueue(redisHost, redisPort, redisPassword string, redisDB int64, name string) *Queue {
 	return newQueue(redisHost, redisPort, redisPassword, redisDB, name)
 }
 
+func SetSSLMode(enabled bool) {
+	sslmode = enabled
+}
+
 // SelectQueue returns a Queue if a queue with the name exists
 func SelectQueue(redisHost, redisPort, redisPassword string, redisDB int64, name string) (queue *Queue, err error) {
-	redisClient := redis.NewClient(&redis.Options{
+	var options = redis.Options{
 		Addr:     redisHost + ":" + redisPort,
 		Password: redisPassword,
 		DB:       int(redisDB),
-		TLSConfig: &tls.Config{InsecureSkipVerify: true},
-	})
-	fmt.Println(redisClient.Ping())
+	}
+	if sslmode {
+		options.TLSConfig = &tls.Config{InsecureSkipVerify: true}
+	}
+	redisClient := redis.NewClient(&options)
+	fmt.Println("Redis:ping-", redisClient.Ping())
 
 	defer redisClient.Close()
 
@@ -57,9 +68,9 @@ func SelectQueue(redisHost, redisPort, redisPassword string, redisDB int64, name
 func newQueue(redisHost, redisPort, redisPassword string, redisDB int64, name string) *Queue {
 	q := &Queue{Name: name}
 	q.redisClient = redis.NewClient(&redis.Options{
-		Addr:     redisHost + ":" + redisPort,
-		Password: redisPassword,
-		DB:       int(redisDB),
+		Addr:      redisHost + ":" + redisPort,
+		Password:  redisPassword,
+		DB:        int(redisDB),
 		TLSConfig: &tls.Config{InsecureSkipVerify: true},
 	})
 	q.redisClient.SAdd(masterQueueKey(), name)

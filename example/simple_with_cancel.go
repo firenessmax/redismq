@@ -26,7 +26,6 @@ func main() {
 			fmt.Println(err)
 		}
 	}
-
 	consumer.Quit()
 	consumer, err = testQueue.AddConsumer("testconsumer")
 	if err != nil {
