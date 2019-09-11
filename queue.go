@@ -75,8 +75,8 @@ func newQueue(redisHost, redisPort, redisPassword string, redisDB int64, name st
 	if sslmode {
 		options.TLSConfig = &tls.Config{InsecureSkipVerify: true}
 	}
-	redisClient := redis.NewClient(&options)
-	fmt.Println("Redis:ping-", redisClient.Ping())
+	q.redisClient = redis.NewClient(&options)
+	fmt.Println("Redis:ping-", q.redisClient.Ping())
 
 	q.redisClient.SAdd(masterQueueKey(), name)
 	q.startStatsWriter()
